@@ -14,14 +14,9 @@
  * WebDocumentView implementation encapsulating the order
  * confirmation view of FsprgEmbeddedStoreDelegate.
  */
-@interface FsprgOrderView : NSView <WebDocumentView> {
-	WebDataSource *dataSource;
-	BOOL needsLayout;
-}
+@interface FsprgOrderView : NSView<WebDocumentView>
 
-- (WebDataSource *)dataSource;
-- (void)setDataSource:(WebDataSource *)aDataSource;
-- (BOOL)needsLayout;
-- (void)setNeedsLayout:(BOOL)flag;
+@property (nonatomic, readwrite, strong) WebDataSource *dataSource;
+@property (nonatomic, readwrite) BOOL needsLayout;
 
 @end

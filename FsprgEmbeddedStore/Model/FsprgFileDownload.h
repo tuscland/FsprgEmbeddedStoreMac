@@ -13,16 +13,13 @@
  * File download information. FsprgFileDownload is backed by a NSMutableDictionary that
  * can be accessed and modified via the raw and setRaw: methods.
  */
-@interface FsprgFileDownload : NSObject {
-	NSDictionary *raw;
-}
+@interface FsprgFileDownload : NSObject
+
+@property (nonatomic, readwrite, strong) NSDictionary *raw;
+@property (nonatomic, readonly) NSURL *fileURL;
 
 + (FsprgFileDownload *)fileDownloadWithDictionary:(NSDictionary *)aDictionary;
 
 - (FsprgFileDownload *)initWithDictionary:(NSDictionary *)aDictionary;
-- (NSDictionary *)raw;
-- (void)setRaw:(NSDictionary *)aDictionary;
-
-- (NSURL *)fileURL;
 
 @end

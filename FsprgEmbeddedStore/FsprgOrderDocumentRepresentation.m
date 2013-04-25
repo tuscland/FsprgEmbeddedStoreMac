@@ -12,36 +12,18 @@
 
 @implementation FsprgOrderDocumentRepresentation
 
-- (id) init
-{
-	self = [super init];
-	if (self != nil) {
-		[self setOrder:nil];
-	}
-	return self;
-}
-
-- (FsprgOrder *)order
-{
-    return [[order retain] autorelease]; 
-}
-
-- (void)setOrder:(FsprgOrder *)anOrder
-{
-    if (order != anOrder) {
-        [order release];
-        order = [anOrder retain];
-    }
-}
+@synthesize order = _order;
 
 - (NSString *)title
 {
 	return @"";
 }
+
 - (NSString *)documentSource
 {
 	return nil;
 }
+
 - (BOOL)canProvideDocumentSource
 {
 	return FALSE;
@@ -53,9 +35,9 @@
 
 - (void)receivedData:(NSData *)aData withDataSource:(WebDataSource *)aDataSource
 {
-	[self setOrder:[FsprgOrder orderFromData:aData]];
-	FsprgEmbeddedStoreController *delegate = [[[aDataSource webFrame] webView] frameLoadDelegate];
-	[[delegate delegate] didReceiveOrder:[self order]];
+    self.order = [FsprgOrder orderFromData:aData];
+	FsprgEmbeddedStoreController *storeController = aDataSource.webFrame.webView.frameLoadDelegate;
+	[storeController.delegate didReceiveOrder:self.order];
 }
 
 - (void)receivedError:(NSError *)anError withDataSource:(WebDataSource *)aDataSource
@@ -64,13 +46,6 @@
 
 - (void)finishedLoadingWithDataSource:(WebDataSource *)aDataSource
 {
-}
-
-- (void)dealloc
-{
-    [self setOrder:nil];
-	
-    [super dealloc];
 }
 
 @end

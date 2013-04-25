@@ -11,9 +11,11 @@
 
 @implementation FsprgLicense
 
+@synthesize raw = _raw;
+
 + (FsprgLicense *)licenseWithDictionary:(NSDictionary *)aDictionary
 {
-	return [[[FsprgLicense alloc] initWithDictionary:aDictionary] autorelease];
+	return [[FsprgLicense alloc] initWithDictionary:aDictionary];
 }
 
 - (FsprgLicense *)initWithDictionary:(NSDictionary *)aDictionary
@@ -23,18 +25,6 @@
 		[self setRaw:aDictionary];
 	}
 	return self;
-}
-- (NSDictionary *)raw
-{
-    return [[raw retain] autorelease]; 
-}
-
-- (void)setRaw:(NSDictionary *)aDictionary
-{
-    if (raw != aDictionary) {
-        [raw release];
-        raw = [aDictionary retain];
-    }
 }
 
 - (NSString *)licenseName
@@ -76,13 +66,6 @@
 {
 	// Don't need KVO as data won't change. Prevent having to keep (retain) instance variables.
 	return FALSE;
-}
-
-- (void)dealloc
-{
-    [self setRaw:nil];
-	
-    [super dealloc];
 }
 
 @end

@@ -13,15 +13,13 @@
  * Order fulfillment information. FsprgFulfillment is backed by a NSMutableDictionary that
  * can be accessed and modified via the raw and setRaw: methods.
  */
-@interface FsprgFulfillment : NSObject {
-	NSDictionary *raw;
-}
+@interface FsprgFulfillment : NSObject
+
+@property (nonatomic, readwrite, strong) NSDictionary *raw;
 
 + (FsprgFulfillment *)fulfillmentWithDictionary:(NSDictionary *)aDictionary;
 
 - (FsprgFulfillment *)initWithDictionary:(NSDictionary *)aDictionary;
-- (NSDictionary *)raw;
-- (void)setRaw:(NSDictionary *)aDictionary;
 
 /*!
  * @param aKey type of fulfillment (e.g. license, download)

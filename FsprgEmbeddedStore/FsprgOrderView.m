@@ -14,48 +14,28 @@
 
 @implementation FsprgOrderView
 
+@synthesize dataSource = _dataSource;
+@synthesize needsLayout = _needsLayout;
+
 - (id)initWithFrame:(NSRect)frame
 {
     self = [super initWithFrame:frame];
     if (self) {
-		[self setDataSource:nil];
-        [self setNeedsLayout:FALSE];
 		[self setAutoresizesSubviews:TRUE];
 		[self setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
     }
     return self;
 }
 
-- (WebDataSource *)dataSource
-{
-    return [[dataSource retain] autorelease]; 
-}
-- (void)setDataSource:(WebDataSource *)aDataSource
-{
-    if (dataSource != aDataSource) {
-        [dataSource release];
-        dataSource = [aDataSource retain];
-    }
-}
 - (void)dataSourceUpdated:(WebDataSource *)aDataSource
 {
-	[self setDataSource:aDataSource];
-}
-
-- (BOOL)needsLayout
-{
-    return needsLayout;
-}
-
-- (void)setNeedsLayout:(BOOL)flag
-{
-    needsLayout = flag;
+    self.dataSource = aDataSource;
 }
 
 - (void)drawRect:(NSRect)aRect
 {
-	if([self needsLayout]) {
-		[self setNeedsLayout:FALSE];
+	if(self.needsLayout) {
+		self.needsLayout = FALSE;
 		[self layout];
 	}
 	[super drawRect:aRect];
@@ -63,14 +43,13 @@
 
 - (void)layout
 {
-	if([[self subviews] count] == 0) {
-		[self setFrame:[[self superview] frame]];
-		
-		FsprgOrderDocumentRepresentation *representation = [[self dataSource] representation];
-		FsprgOrder *order = [representation order];
+	if(self.subviews.count == 0) {
+        self.frame = self.superview.frame;
 
-		FsprgEmbeddedStoreController *delegate = [[[[self dataSource] webFrame] webView] UIDelegate];
-		NSView *newSubview = [[delegate delegate] viewWithFrame:[self frame] forOrder:order];
+		FsprgOrderDocumentRepresentation *representation = self.dataSource.representation;
+		FsprgOrder *order = representation.order;
+		FsprgEmbeddedStoreController *delegate = self.dataSource.webFrame.webView.UIDelegate;
+		NSView *newSubview = [delegate.delegate viewWithFrame:self.frame forOrder:order];
 		[self addSubview:newSubview];
 	}
 }
@@ -80,13 +59,6 @@
 }
 - (void)viewWillMoveToHostWindow:(NSWindow *)hostWindow
 {
-}
-
-- (void)dealloc
-{
-    [self setDataSource:nil];
-	
-    [super dealloc];
 }
 
 @end

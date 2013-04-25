@@ -24,7 +24,7 @@ typedef enum {
  */
 @protocol FsprgEmbeddedStoreDelegate <NSObject>
 
-/*!
+/*![
  * Gets called on initial load of the store.
  * @param url URL of the loaded store
  */

@@ -6,184 +6,163 @@
 //  Copyright 2010 FastSpring. All rights reserved.
 //
 
+#import "FsprgPopUpWindow.h"
 #import "FsprgEmbeddedStoreController.h"
 #import "FsprgOrderView.h"
 #import "FsprgOrderDocumentRepresentation.h"
 
 
-@interface FsprgEmbeddedStoreController (Private)
-- (void)setIsLoading:(BOOL)aFlag;
-- (void)setEstimatedLoadingProgress:(double)aProgress;
-- (void)setIsSecure:(BOOL)aFlag;
-- (void)setStoreHost:(NSString *)aHost;
+@interface FsprgEmbeddedStoreController ()
+
+@property (nonatomic, readwrite, strong) NSString *storeHost;
+@property (nonatomic, readwrite, strong) NSWindow *popUpWindow;
+@property (nonatomic, readwrite, copy) NSURLRequest *cachedPopUpLinkRequest;
+
 - (void)resizeContentDivE;
 - (void)webViewFrameChanged:(NSNotification *)aNotification;
+
 @end
+
 
 @implementation FsprgEmbeddedStoreController
 
+@synthesize webView = _webView;
+@synthesize delegate = _delegate;
+@synthesize storeHost = _storeHost;
+@synthesize popUpWindow = _popUpWindow;
+@synthesize cachedPopUpLinkRequest = _cachedPopUpLinkRequest;
+
 + (void)initialize
 {
-	[WebView registerViewClass:[FsprgOrderView class]
-		   representationClass:[FsprgOrderDocumentRepresentation class]
-				   forMIMEType:@"application/x-fsprgorder+xml"];
+    [WebView registerViewClass:[FsprgOrderView class]
+           representationClass:[FsprgOrderDocumentRepresentation class]
+                   forMIMEType:@"application/x-fsprgorder+xml"];
 }
 
-- (id) init
++ (BOOL)automaticallyNotifiesObserversOfLoading
 {
-	self = [super init];
-	if (self != nil) {
-		[self setWebView:nil];
-		[self setDelegate:nil];
-		[self setStoreHost:nil];
-	}
-	return self;
+    return NO;
 }
 
-- (WebView *)webView
++ (BOOL)automaticallyNotifiesObserversOfEstimatedLoadingProgress
 {
-    return [[webView retain] autorelease]; 
+    return NO;
+}
+
++ (BOOL)automaticallyNotifiesObserversOfSecure
+{
+    return NO;
 }
 
 - (void)setWebView:(WebView *)aWebView
 {
-    if (webView != aWebView) {
-		[webView setPostsFrameChangedNotifications:FALSE];
-		[webView setFrameLoadDelegate:nil];
-		[webView setUIDelegate:nil];
-		[webView setApplicationNameForUserAgent:nil];
-		[[NSNotificationCenter defaultCenter] removeObserver:self];
-		
-		[webView release];
-        webView = [aWebView retain];
-		
-		if (webView) {
-			[webView setPostsFrameChangedNotifications:TRUE];
-			[webView setFrameLoadDelegate:self];
-			[webView setUIDelegate:self];
-			[webView setApplicationNameForUserAgent:@"FSEmbeddedStore/2.0"];
-			[[NSNotificationCenter defaultCenter] addObserver:self 
-													 selector:@selector(webViewFrameChanged:) 
-														 name:NSViewFrameDidChangeNotification 
-													   object:webView];
-			[[NSNotificationCenter defaultCenter] addObserver:self 
-													 selector:@selector(estimatedLoadingProgressChanged:) 
-														 name:WebViewProgressStartedNotification 
-													   object:webView];
-			[[NSNotificationCenter defaultCenter] addObserver:self 
-													 selector:@selector(estimatedLoadingProgressChanged:) 
-														 name:WebViewProgressEstimateChangedNotification 
-													   object:webView];
-		}
+    if (_webView != aWebView) {
+        [_webView close];
+        [_webView setPostsFrameChangedNotifications:FALSE];
+        [_webView setFrameLoadDelegate:nil];
+        [_webView setUIDelegate:nil];
+        [_webView setApplicationNameForUserAgent:nil];
+        [[NSNotificationCenter defaultCenter] removeObserver:self];
+
+        _webView = aWebView;
+
+        if (_webView) {
+            [_webView setPostsFrameChangedNotifications:TRUE];
+            [_webView setFrameLoadDelegate:self];
+            [_webView setUIDelegate:self];
+            [_webView setPolicyDelegate:self];
+            [_webView setApplicationNameForUserAgent:@"FSEmbeddedStore/2.0"];
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(webViewFrameChanged:)
+                                                         name:NSViewFrameDidChangeNotification
+                                                       object:_webView];
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(estimatedLoadingProgressChanged:)
+                                                         name:WebViewProgressStartedNotification
+                                                       object:_webView];
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(estimatedLoadingProgressChanged:)
+                                                         name:WebViewProgressEstimateChangedNotification
+                                                       object:_webView];
+        }
     }
-}
-
-- (id <FsprgEmbeddedStoreDelegate>)delegate
-{
-	if(delegate == nil) {
-		NSLog(@"No delegate has been assigned to FsprgEmbeddedStoreController!");
-	}
-	return delegate;
-}
-
-- (void)setDelegate:(id <FsprgEmbeddedStoreDelegate>)aDelegate
-{
-	// Keep a weak reference to delegates to prevent circular references
-	// See https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/MemoryMgmt/Articles/mmObjectOwnership.html#//apple_ref/doc/uid/20000043-1044135
-	delegate = aDelegate;
 }
 
 - (void)loadWithParameters:(FsprgStoreParameters *)parameters
 {
-	NSURLRequest *urlRequest = [parameters toURLRequest];
+    if (self.delegate == nil) {
+        NSLog(@"No delegate has been assigned to FsprgEmbeddedStoreController!");
+    }
+    NSURLRequest *urlRequest = [parameters toURLRequest];
 
-	NSArray *cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL:[urlRequest URL]];
-	NSUInteger i, count = [cookies count];
-	for (i = 0; i < count; i++) {
-		NSHTTPCookie *cookie = [cookies objectAtIndex:i];
-		[[NSHTTPCookieStorage sharedHTTPCookieStorage] deleteCookie:cookie];
-	}
-	
-	[self setStoreHost:nil];
-	[[webView mainFrame] loadRequest:urlRequest];
+    NSArray *cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL:[urlRequest URL]];
+    NSUInteger i, count = [cookies count];
+    for (i = 0; i < count; i++) {
+        NSHTTPCookie *cookie = [cookies objectAtIndex:i];
+        [[NSHTTPCookieStorage sharedHTTPCookieStorage] deleteCookie:cookie];
+    }
+
+    self.storeHost = nil;
+    [self.webView.mainFrame loadRequest:urlRequest];
 }
 
 - (void)loadWithContentsOfFile:(NSString *)aPath
 {
-	[self setStoreHost:nil];
+    if (self.delegate == nil) {
+        NSLog(@"No delegate has been assigned to FsprgEmbeddedStoreController!");
+    }
+    self.storeHost = nil;
 
-	NSData *data = [NSData dataWithContentsOfFile:aPath];
-	if(data == nil) {
-		NSLog(@"File %@ not found.", aPath);
-	} else {
-		[[webView mainFrame] loadData:data MIMEType:@"application/x-fsprgorder+xml" textEncodingName:@"UTF-8" baseURL:nil];
-	}
+    NSData *data = [NSData dataWithContentsOfFile:aPath];
+    if(data == nil) {
+        NSLog(@"File %@ not found.", aPath);
+    } else {
+        [self.webView.mainFrame loadData:data MIMEType:@"application/x-fsprgorder+xml" textEncodingName:@"UTF-8" baseURL:nil];
+    }
 }
 
 - (BOOL)isLoading
 {
-	return [self estimatedLoadingProgress] < 100;
-}
-- (void)setIsLoading:(BOOL)aFlag
-{
-	// just triggering change observer
+    return self.estimatedLoadingProgress < 100;
 }
 - (double)estimatedLoadingProgress
 {
-	return [webView estimatedProgress] * 100;
-}
-- (void)setEstimatedLoadingProgress:(double)aProgress
-{
-	// just triggering change observer
+    return self.webView.estimatedProgress * 100;
 }
 - (void)estimatedLoadingProgressChanged:(NSNotification *)aNotification
 {
-	[self setEstimatedLoadingProgress:-1];
-	[self setIsLoading:TRUE];
+    [self willChangeValueForKey:@"estimatedLoadingProgress"];
+    [self willChangeValueForKey:@"loading"];
+    // just trigger change...
+    [self didChangeValueForKey:@"loading"];
+    [self didChangeValueForKey:@"estimatedLoadingProgress"];
 }
 - (BOOL)isSecure
 {
-	WebDataSource *mainFrameDs = [[[self webView] mainFrame] dataSource];
-	return [@"https" isEqualTo:[[[mainFrameDs request] URL] scheme]];
-}
-- (void)setIsSecure:(BOOL)aFlag
-{
-	// just triggering change observer
-}
-
-- (NSString *)storeHost
-{
-    return [[storeHost retain] autorelease]; 
-}
-
-- (void)setStoreHost:(NSString *)aHost
-{
-    if (storeHost != aHost) {
-		[storeHost release];
-        storeHost = [aHost retain];
-    }
+    WebDataSource *mainFrameDs = self.webView.mainFrame.dataSource;
+    return [@"https" isEqualTo:[[[mainFrameDs request] URL] scheme]];
 }
 
 - (void)resizeContentDivE {
-	DOMElement *resizableContentE = [[[[self webView] mainFrame] DOMDocument] getElementById:@"FsprgResizableContent"];
-	if(resizableContentE == nil) {
-		return;
-	}
-	
-	float windowHeight = [[self webView] frame].size.height;
-	float pageNavigationHeight = [[[[self webView] windowScriptObject] evaluateWebScript:@"document.getElementsByClassName('store-page-navigation')[0].clientHeight"] floatValue];
-	
-	DOMCSSStyleDeclaration *cssStyle = [[self webView] computedStyleForElement:resizableContentE pseudoElement:nil];	
-	float paddingTop = [[[cssStyle paddingBottom] substringToIndex:[[cssStyle paddingTop] length]-2] floatValue];
-	float paddingBottom = [[[cssStyle paddingBottom] substringToIndex:[[cssStyle paddingBottom] length]-2] floatValue];
-	
-	float newHeight = windowHeight - paddingTop - paddingBottom - pageNavigationHeight;
-	[[resizableContentE style] setHeight:[NSString stringWithFormat:@"%fpx", newHeight]];
+    DOMElement *resizableContentE = [self.webView.mainFrame.DOMDocument getElementById:@"FsprgResizableContent"];
+    if(resizableContentE == nil) {
+        return;
+    }
+
+    float windowHeight = self.webView.frame.size.height;
+    float pageNavigationHeight = [[[self.webView windowScriptObject] evaluateWebScript:@"document.getElementsByClassName('store-page-navigation')[0].clientHeight"] floatValue];
+
+    DOMCSSStyleDeclaration *cssStyle = [self.webView computedStyleForElement:resizableContentE pseudoElement:nil];
+    float paddingTop = [[[cssStyle paddingBottom] substringToIndex:[[cssStyle paddingTop] length]-2] floatValue];
+    float paddingBottom = [[[cssStyle paddingBottom] substringToIndex:[[cssStyle paddingBottom] length]-2] floatValue];
+
+    float newHeight = windowHeight - paddingTop - paddingBottom - pageNavigationHeight;
+    [[resizableContentE style] setHeight:[NSString stringWithFormat:@"%fpx", newHeight]];
 }
 
 - (void)webViewFrameChanged:(NSNotification *)aNotification
 {
-	[self resizeContentDivE];
+    [self resizeContentDivE];
 }
 
 
@@ -195,72 +174,112 @@
 
 - (void)webView:(WebView *)sender didFinishLoadForFrame:(WebFrame *)frame
 {
-	[self setIsSecure:TRUE]; // just triggering change observer
+    [self willChangeValueForKey:@"secure"];
+    [self didChangeValueForKey:@"secure"];
 
-	[self resizeContentDivE];
-	
-	NSURL *newURL = [[[frame dataSource] request] URL];
-	NSString *newStoreHost;
-	if ([@"file" isEqualTo:[newURL scheme]]) {
-		newStoreHost = @"file";
-	} else {
-		newStoreHost = [newURL host];
-	}
-	
-	if([self storeHost] == nil) {
-		[self setStoreHost:newStoreHost];
-		[[self delegate] didLoadStore:newURL];
-	} else {
-		FsprgPageType newPageType;
-		if([newStoreHost isEqualTo:[self storeHost]]) {
-			newPageType = FsprgPageFS;
-		} else if([newStoreHost hasSuffix:@"paypal.com"]) {
-			newPageType = FsprgPagePayPal;
-		} else {
-			newPageType = FsprgPageUnknown;
-		}
-		[[self delegate] didLoadPage:newURL ofType:newPageType];
-	}
+    [self resizeContentDivE];
+
+    NSURL *newURL = [[[frame dataSource] request] URL];
+    NSString *newStoreHost;
+    if ([@"file" isEqualTo:[newURL scheme]]) {
+        newStoreHost = @"file";
+    } else {
+        newStoreHost = [newURL host];
+    }
+
+    if([self storeHost] == nil) {
+        self.storeHost = newStoreHost;
+        [self.delegate didLoadStore:newURL];
+    } else {
+        FsprgPageType newPageType;
+        if([newStoreHost isEqualTo:[self storeHost]]) {
+            newPageType = FsprgPageFS;
+        } else if([newStoreHost hasSuffix:@"paypal.com"]) {
+            newPageType = FsprgPagePayPal;
+        } else {
+            newPageType = FsprgPageUnknown;
+        }
+        [self.delegate didLoadPage:newURL ofType:newPageType];
+    }
 }
 
 - (void)webView:(WebView *)sender didFailProvisionalLoadWithError:(NSError *)error forFrame:(WebFrame *)frame
 {
-	[[self delegate] webView:sender didFailProvisionalLoadWithError:error forFrame:frame];
+    [self.delegate webView:sender didFailProvisionalLoadWithError:error forFrame:frame];
 }
 
 - (void)webView:(WebView *)sender didFailLoadWithError:(NSError *)error forFrame:(WebFrame *)frame
 {
-	[[self delegate] webView:sender didFailLoadWithError:error forFrame:frame];
+    [self.delegate webView:sender didFailLoadWithError:error forFrame:frame];
 }
 
 // WebUIDelegate
 
 - (void)webView:(WebView *)sender runJavaScriptAlertPanelWithMessage:(NSString *)message initiatedByFrame:(WebFrame *)frame
 {
-	NSRunAlertPanel(@"Alert", message, @"OK", nil, nil);
+    NSRunAlertPanel(@"Alert", message, @"OK", nil, nil);
+}
+
+- (void)webView:(WebView *)sender decidePolicyForNewWindowAction:(NSDictionary *)actionInformation
+        request:(NSURLRequest *)request
+   newFrameName:(NSString *)frameName decisionListener:(id<WebPolicyDecisionListener>)listener
+{
+    self.cachedPopUpLinkRequest = request;
+    [listener use];
 }
 
 - (WebView *)webView:(WebView *)sender createWebViewWithRequest:(NSURLRequest *)request
 {
-	NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0,0,0,0)
-										 styleMask:(NSClosableWindowMask|NSResizableWindowMask)
-										 backing:NSBackingStoreBuffered
-										 defer:NO];
-	WebView *subWebView = [[[WebView alloc] initWithFrame:NSMakeRect(0,0,0,0)] autorelease];
-	[window setReleasedWhenClosed:TRUE];
-	[window setContentView:subWebView];
-	[window makeKeyAndOrderFront:sender];
-	
-	return subWebView;
+    if (request == nil && self.cachedPopUpLinkRequest != nil) {
+		request = self.cachedPopUpLinkRequest;
+        [[NSWorkspace sharedWorkspace] openURL:[request URL]];
+        self.cachedPopUpLinkRequest = nil;
+        return nil;
+    }
+    WebView *subWebView = [[WebView alloc] initWithFrame:NSMakeRect(0,0,0,0)];
+    NSWindow *window = [[FsprgPopUpWindow alloc] init];
+    window.contentView = subWebView;
+    self.popUpWindow = window;
+    [self.webView.window addChildWindow:window ordered:NSWindowAbove];
+    return subWebView;
+}
+
+- (void)setPopUpWindow:(NSWindow *)popUpWindow
+{
+    if (_popUpWindow != popUpWindow) {
+        if (_popUpWindow) {
+            [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                            name:NSWindowDidResignKeyNotification
+                                                          object:_popUpWindow];
+        }
+        _popUpWindow = popUpWindow;
+        if (_popUpWindow) {
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(popUpWindowDidResignKey:)
+                                                         name:NSWindowDidResignKeyNotification
+                                                       object:_popUpWindow];
+        }
+    }
+}
+
+- (void)popUpWindowDidResignKey:(NSNotification *)notification
+{
+    NSWindow *popUpWindow = self.popUpWindow;
+    if (notification.object == popUpWindow) {
+        [self.webView.window removeChildWindow:popUpWindow];
+        [popUpWindow orderOut:nil];
+        dispatch_async(dispatch_get_current_queue(), ^{
+            self.popUpWindow = nil;
+        });
+    }
 }
 
 - (void)dealloc
 {
-    [self setWebView:nil];
-    [self setDelegate:nil];
-	[self setStoreHost:nil];
-	
-    [super dealloc];
+    self.webView = nil;
+    _delegate = nil;
+    _storeHost = nil;
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 @end

@@ -13,30 +13,20 @@
 
 @implementation FsprgFulfillment
 
+@synthesize raw = _raw;
+
 + (FsprgFulfillment *)fulfillmentWithDictionary:(NSDictionary *)aDictionary
 {
-	return [[[FsprgFulfillment alloc] initWithDictionary:aDictionary] autorelease];
+	return [[FsprgFulfillment alloc] initWithDictionary:aDictionary];
 }
 
 - (FsprgFulfillment *)initWithDictionary:(NSDictionary *)aDictionary
 {
 	self = [super init];
 	if (self != nil) {
-		[self setRaw:aDictionary];
+        self.raw = aDictionary;
 	}
 	return self;
-}
-- (NSDictionary *)raw
-{
-    return [[raw retain] autorelease]; 
-}
-
-- (void)setRaw:(NSDictionary *)aDictionary
-{
-    if (raw != aDictionary) {
-        [raw release];
-        raw = [aDictionary retain];
-    }
 }
 
 - (id)valueForKey:(NSString *)aKey
@@ -57,13 +47,6 @@
 {
 	// Don't need KVO as data won't change. Prevent having to keep (retain) instance variables.
 	return FALSE;
-}
-
-- (void)dealloc
-{
-    [self setRaw:nil];
-	
-    [super dealloc];
 }
 
 @end

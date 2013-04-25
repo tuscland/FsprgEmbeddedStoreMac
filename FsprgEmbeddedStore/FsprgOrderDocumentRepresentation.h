@@ -14,11 +14,8 @@
 /*!
  * WebDocumentRepresentation that calls FsprgEmbeddedStoreDelegate on receiving the order.
  */
-@interface FsprgOrderDocumentRepresentation : NSObject <WebDocumentRepresentation> {
-	FsprgOrder *order;
-}
+@interface FsprgOrderDocumentRepresentation : NSObject<WebDocumentRepresentation>
 
-- (FsprgOrder *)order;
-- (void)setOrder:(FsprgOrder *)anOrder;
+@property (nonatomic, readwrite, strong) FsprgOrder *order;
 
 @end

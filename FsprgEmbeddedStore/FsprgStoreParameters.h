@@ -8,111 +8,92 @@
 
 #import <Cocoa/Cocoa.h>
 
-/*! Constants for setOrderProcessType: */
-extern NSString * const kFsprgOrderProcessDetail;
-extern NSString * const kFsprgOrderProcessInstant;
+/*! Constants for orderProcessType */
+extern NSString *const kFsprgOrderProcessDetail;
+extern NSString *const kFsprgOrderProcessInstant;
 
-/*! Constants for setMode: */
-extern NSString * const kFsprgModeActive;
-extern NSString * const kFsprgModeActiveTest;
-extern NSString * const kFsprgModeTest;
+/*! Constants for mode */
+extern NSString *const kFsprgModeActive;
+extern NSString *const kFsprgModeActiveTest;
+extern NSString *const kFsprgModeTest;
 
 
 /*!
  * FastSpring store parameters. FsprgStoreParameters is backed by a NSMutableDictionary that
  * can be accessed and modified via the raw and setRaw: methods.
  */
-@interface FsprgStoreParameters : NSObject {
-	BOOL hasContactDefaults;
-	NSMutableDictionary *raw;
-}
-
-+ (FsprgStoreParameters *)parameters;
-+ (FsprgStoreParameters *)parametersWithRaw:(NSMutableDictionary *)aRaw;
-
-- (NSURLRequest *)toURLRequest;
-- (NSURL *)toURL;
-
-- (id)initWithRaw:(NSMutableDictionary *)aRaw;
-- (NSMutableDictionary *)raw;
-- (void)setRaw:(NSMutableDictionary *)aRaw;
+@interface FsprgStoreParameters : NSObject
 
 /*!
  * Pass a language code via the URL to bypass automatic language detection.
  * Example: de
  */
-- (NSString *)language;
-- (void)setLanguage:(NSString *)aLanguage;
+@property (nonatomic, readwrite) NSString *language;
 
 /*!
  * Use kFsprgOrderProcessDetail or kFsprgOrderProcessInstant.
  */
-- (NSString *)orderProcessType;
-- (void)setOrderProcessType:(NSString *)anOrderProcessType;
+@property (nonatomic, readwrite) NSString *orderProcessType;
 
 /*!
  * Store path name and product path name.
  * These are found in a full product URL such as sites.fastspring.com/<STOREPATH>/product/<PRODUCTPATH>
  */
-- (void)setStoreId:(NSString *)aStoreId withProductId:(NSString *)aProductId;
-- (NSString *)storeId;
-- (void)setStoreId:(NSString *)aStoreId;
-- (NSString *)productId;
-- (void)setProductId:(NSString *)aProductId;
+@property (nonatomic, readwrite) NSString *storeId;
+@property (nonatomic, readwrite) NSString *productId;
 
 /*!
  * Use kFsprgModeActive, kFsprgModeActiveTest or kFsprgModeTest.
  */
-- (NSString *)mode;
-- (void)setMode:(NSString *)aMode;
+@property (nonatomic, readwrite) NSString *mode;
 
 /*!
  * Used for "External Tracking". Go to "Link Sources" inside SpringBoard.
  * Example: november_sale_post
  */
-- (NSString *)campaign;
-- (void)setCampaign:(NSString *)aCampaign;
+@property (nonatomic, readwrite) NSString *campaign;
 
 /*!
  * Used for advanced and atypical store configuration options.
  */
-- (NSString *)option;
-- (void)setOption:(NSString *)anOption;
+@property (nonatomic, readwrite) NSString *option;
 
 /*!
  * Pass a custom referrer via the URL to override the automatically detected referring URL (HTTP_REFERER).
- * The value passed in this parameter is available in notifications and data exports. If a value is 
+ * The value passed in this parameter is available in notifications and data exports. If a value is
  * passed in this parameter then no data will be stored from the HTTP_REFERER header.
  * Example: xyz123
  */
-- (NSString *)referrer;
-- (void)setReferrer:(NSString *)aReferrer;
+@property (nonatomic, readwrite) NSString *referrer;
 
 /*!
  * Used for "External Tracking". Go to "Link Sources" inside SpringBoard.
  * Example: my_blog
  */
-- (NSString *)source;
-- (void)setSource:(NSString *)aSource;
+@property (nonatomic, readwrite) NSString *source;
 
 /*!
- * Pass a coupon code via the URL to automatically apply a coupon to the order so that the customer 
+ * Pass a coupon code via the URL to automatically apply a coupon to the order so that the customer
  * does not need to enter it. A corresponding coupon code must be setup and associated with a promotion.
  * Example: DECSPECIAL987
  */
-- (NSString *)coupon;
-- (void)setCoupon:(NSString *)aCoupon;
+@property (nonatomic, readwrite) NSString *coupon;
 
-- (BOOL)hasContactDefaults;
-- (NSString *)contactFname;
-- (void)setContactFname:(NSString *)aContactFname;
-- (NSString *)contactLname;
-- (void)setContactLname:(NSString *)aContactLname;
-- (NSString *)contactEmail;
-- (void)setContactEmail:(NSString *)aContactEmail;
-- (NSString *)contactCompany;
-- (void)setContactCompany:(NSString *)aContactCompany;
-- (NSString *)contactPhone;
-- (void)setContactPhone:(NSString *)aContactPhone;
+@property (nonatomic, readonly) BOOL hasContactDefaults;
+@property (nonatomic, readwrite) NSString *contactFname;
+@property (nonatomic, readwrite) NSString *contactLname;
+@property (nonatomic, readwrite) NSString *contactEmail;
+@property (nonatomic, readwrite) NSString *contactCompany;
+@property (nonatomic, readwrite) NSString *contactPhone;
+
++ (FsprgStoreParameters *)parameters;
++ (FsprgStoreParameters *)parametersWithRaw:(NSMutableDictionary *)aRaw;
+
+- (id)initWithRaw:(NSMutableDictionary *)aRaw;
+
+- (void)setStoreId:(NSString *)aStoreId withProductId:(NSString *)aProductId;
+
+- (NSURLRequest *)toURLRequest;
+- (NSURL *)toURL;
 
 @end
