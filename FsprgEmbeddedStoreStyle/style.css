@@ -1,4 +1,8 @@
 /* FastSpring Mac Embedded Store Styles */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
 body {
 	font: -webkit-control;
 	font-family: "Lucida Grande", helvetica, sans-serif;
@@ -118,6 +122,7 @@ a {
 .store-product-detail-offer-title {
 	-webkit-appearance: button;	
 	-webkit-user-select: none;
+  	-webkit-user-select: none;
 	-webkit-user-drag: none;
 	font: -webkit-control;
 	color: -webkit-text;
@@ -128,7 +133,6 @@ a {
 	font: -webkit-control;
 	color: -webkit-text;
 }
-
 #store-processing-element {
 	font: -webkit-control;
 	background-image: none;
