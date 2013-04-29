@@ -57,21 +57,30 @@
 - (void)setWebView:(WebView *)aWebView
 {
     if (_webView != aWebView) {
+        _webView.postsFrameChangedNotifications = NO;
+        _webView.frameLoadDelegate = nil;
+        _webView.UIDelegate = nil;
+        _webView.policyDelegate = nil;
+        _webView.applicationNameForUserAgent = nil;
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                        name:NSViewFrameDidChangeNotification
+                                                      object:_webView];
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                        name:WebViewProgressStartedNotification
+                                                      object:_webView];
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                        name:WebViewProgressEstimateChangedNotification
+                                                      object:_webView];
         [_webView close];
-        [_webView setPostsFrameChangedNotifications:FALSE];
-        [_webView setFrameLoadDelegate:nil];
-        [_webView setUIDelegate:nil];
-        [_webView setApplicationNameForUserAgent:nil];
-        [[NSNotificationCenter defaultCenter] removeObserver:self];
 
         _webView = aWebView;
 
         if (_webView) {
-            [_webView setPostsFrameChangedNotifications:TRUE];
-            [_webView setFrameLoadDelegate:self];
-            [_webView setUIDelegate:self];
-            [_webView setPolicyDelegate:self];
-            [_webView setApplicationNameForUserAgent:@"FSEmbeddedStore/2.0"];
+            _webView.postsFrameChangedNotifications = YES;
+            _webView.frameLoadDelegate = self;
+            _webView.UIDelegate = self;
+            _webView.policyDelegate = self;
+            _webView.applicationNameForUserAgent = @"FSEmbeddedStore/2.0";
             [[NSNotificationCenter defaultCenter] addObserver:self
                                                      selector:@selector(webViewFrameChanged:)
                                                          name:NSViewFrameDidChangeNotification
@@ -114,7 +123,7 @@
     self.storeHost = nil;
 
     NSData *data = [NSData dataWithContentsOfFile:aPath];
-    if(data == nil) {
+    if (data == nil) {
         NSLog(@"File %@ not found.", aPath);
     } else {
         [self.webView.mainFrame loadData:data MIMEType:@"application/x-fsprgorder+xml" textEncodingName:@"UTF-8" baseURL:nil];
@@ -140,7 +149,7 @@
 - (BOOL)isSecure
 {
     WebDataSource *mainFrameDs = self.webView.mainFrame.dataSource;
-    return [@"https" isEqualTo:[[[mainFrameDs request] URL] scheme]];
+    return [@"https" isEqualToString:mainFrameDs.request.URL.scheme];
 }
 
 - (void)resizeContentDivE {
@@ -179,22 +188,22 @@
 
     [self resizeContentDivE];
 
-    NSURL *newURL = [[[frame dataSource] request] URL];
+    NSURL *newURL = frame.dataSource.request.URL;
     NSString *newStoreHost;
-    if ([@"file" isEqualTo:[newURL scheme]]) {
+    if ([@"file" isEqualToString:newURL.scheme]) {
         newStoreHost = @"file";
     } else {
         newStoreHost = [newURL host];
     }
 
-    if([self storeHost] == nil) {
+    if ([self storeHost] == nil) {
         self.storeHost = newStoreHost;
         [self.delegate didLoadStore:newURL];
     } else {
         FsprgPageType newPageType;
-        if([newStoreHost isEqualTo:[self storeHost]]) {
+        if([newStoreHost isEqualToString:self.storeHost]) {
             newPageType = FsprgPageFS;
-        } else if([newStoreHost hasSuffix:@"paypal.com"]) {
+        } else if ([newStoreHost hasSuffix:@"paypal.com"]) {
             newPageType = FsprgPagePayPal;
         } else {
             newPageType = FsprgPageUnknown;
