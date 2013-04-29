@@ -286,8 +286,7 @@
 - (void)dealloc
 {
     self.webView = nil;
-    _delegate = nil;
-    _storeHost = nil;
+    self.popUpWindow = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
