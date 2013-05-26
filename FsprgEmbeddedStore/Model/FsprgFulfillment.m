@@ -33,10 +33,10 @@
 {
 	NSDictionary *anItem = [[self raw] valueForKey:aKey];
 	
-	if([[anItem valueForKey:@"FulfillmentType"] isEqual:@"License"]) {
+	if([[anItem valueForKey:@"FulfillmentType"] isEqualToString:@"License"]) {
 		return [FsprgLicense licenseWithDictionary:anItem];
 	}
-	if([[anItem valueForKey:@"FulfillmentType"] isEqual:@"File"]) {
+	if([[anItem valueForKey:@"FulfillmentType"] isEqualToString:@"File"]) {
 		return [FsprgFileDownload fileDownloadWithDictionary:anItem];
 	}
 	
