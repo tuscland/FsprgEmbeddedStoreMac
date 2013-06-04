@@ -119,13 +119,13 @@ static NSMutableDictionary *keyPathsForValuesAffecting;
     }
 
     NSString *urlAsStr;
-    if([kFsprgOrderProcessDetail isEqualTo:self.orderProcessType]) {
+    if([kFsprgOrderProcessDetail isEqualToString:self.orderProcessType]) {
         NSString *protocol = @"http";
         if([self hasContactDefaults]) {
             protocol = @"https";
         }
         urlAsStr = [NSString stringWithFormat:@"%@://sites.fastspring.com/%@/product/%@", protocol, storeIdEncoded, productIdEncoded];
-    } else if([kFsprgOrderProcessInstant isEqualTo:self.orderProcessType]) {
+    } else if([kFsprgOrderProcessInstant isEqualToString:self.orderProcessType]) {
         urlAsStr = [NSString stringWithFormat:@"https://sites.fastspring.com/%@/instant/%@", storeIdEncoded, productIdEncoded];
     } else {
         NSAssert1(FALSE, @"OrderProcessType '%@' unknown.", self.orderProcessType);
