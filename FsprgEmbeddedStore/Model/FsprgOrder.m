@@ -16,13 +16,16 @@
 + (FsprgOrder *)orderFromData:(NSData *)aData
 {
 	NSPropertyListFormat *format = nil;
-	NSString *errorDesc = nil;
+	NSError *error = nil;
+
+	NSDictionary *aDict = [NSPropertyListSerialization propertyListWithData:aData
+																	options:NSPropertyListImmutable
+																	 format:format
+																	  error:&error];
 	
-	NSDictionary *aDict = [NSPropertyListSerialization propertyListFromData:aData
-													   mutabilityOption:NSPropertyListImmutable
-													   format:format 
-													   errorDescription:&errorDesc];
-		
+	if (error != nil) {
+		return nil;
+	}
 	
 	return [[FsprgOrder alloc] initWithDictionary:aDict];
 }

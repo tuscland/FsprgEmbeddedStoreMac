@@ -12,7 +12,7 @@
 #import "FsprgOrderDocumentRepresentation.h"
 
 
-@interface FsprgEmbeddedStoreController ()
+@interface FsprgEmbeddedStoreController () <WebFrameLoadDelegate, WebUIDelegate, WebPolicyDelegate>
 
 @property (nonatomic, readwrite, strong) NSString *storeHost;
 @property (nonatomic, readwrite, strong) NSWindow *popUpWindow;
@@ -282,9 +282,12 @@
     if (notification.object == popUpWindow) {
         [self.webView.window removeChildWindow:popUpWindow];
         [popUpWindow orderOut:nil];
-        dispatch_async(dispatch_get_current_queue(), ^{
-            self.popUpWindow = nil;
-        });
+		//
+		// FIXME: cheap way of doing an action after a tick of the runloop.
+        dispatch_async(
+			dispatch_get_main_queue(), ^{
+				self.popUpWindow = nil;
+			});
     }
 }
 
