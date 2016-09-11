@@ -226,12 +226,15 @@
 
 - (void)webView:(WebView *)sender runJavaScriptAlertPanelWithMessage:(NSString *)message initiatedByFrame:(WebFrame *)frame
 {
-	[[NSAlert alertWithMessageText:@"Alert"
-					 defaultButton:@"OK"
-				   alternateButton:nil
-					   otherButton:nil
-		 informativeTextWithFormat:@"%@", message]
-	 runModal];
+	NSAlert *alert = [[NSAlert alloc] init];
+	
+	alert.alertStyle = NSWarningAlertStyle;
+	alert.messageText = @"Alert";
+	alert.informativeText = message;
+	
+	[alert addButtonWithTitle:@"OK"];
+
+	[alert runModal];
 }
 
 - (void)webView:(WebView *)sender decidePolicyForNewWindowAction:(NSDictionary *)actionInformation
