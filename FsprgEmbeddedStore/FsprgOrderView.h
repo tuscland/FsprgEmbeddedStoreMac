@@ -17,6 +17,6 @@
 @interface FsprgOrderView : NSView<WebDocumentView>
 
 @property (nonatomic, readwrite, strong) WebDataSource *dataSource;
-@property (nonatomic, readwrite) BOOL needsLayout;
+@property (readwrite) BOOL needsLayout;
 
 @end
